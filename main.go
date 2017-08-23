@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-fsnotify/fsnotify"
 )
@@ -25,6 +27,13 @@ func printOutput(outs []byte) {
 	}
 }
 
+func kill(cmd *exec.Cmd) error {
+	kill := exec.Command("TASKKILL", "/T", "/F", "/PID", strconv.Itoa(cmd.Process.Pid))
+	kill.Stderr = os.Stderr
+	kill.Stdout = os.Stdout
+	return kill.Run()
+}
+
 // main
 func main() {
 
@@ -35,13 +44,21 @@ func main() {
 	}
 	defer watcher.Close()
 
-	c := exec.Command("cmd", "/C", "go", "run", "testexample\test.go")
+	fc := exec.Command("cmd", "/C", "go", "run", "testexample/test.go")
 
-	//c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
+	fmt.Println("testing")
 
-	c.Run()
+	fc.Stdin = os.Stdin
+
+	fc.Stdout = os.Stdout
+
+	fc.Stderr = os.Stderr
+
+	fc.Start()
+
+	fmt.Println("deneme")
+
+	// fmt.Printf("testing", out.String())
 
 	//
 	done := make(chan bool)
@@ -54,13 +71,39 @@ func main() {
 			case event := <-watcher.Events:
 				fmt.Printf("EVENT! %#v\n", event)
 
-				c := exec.Command("cmd", "/C", "go", "run", event.Name)
+				kill := exec.Command("TASKKILL", "/T", "/F", "/PID", strconv.Itoa(fc.Process.Pid))
 
-				c.Stdin = os.Stdin
-				c.Stdout = os.Stdout
-				c.Stderr = os.Stderr
+				kill.Stdin = os.Stdin
 
-				c.Run()
+				kill.Stdout = os.Stdout
+
+				kill.Stderr = os.Stderr
+
+				kill.Run()
+
+				time.Sleep(time.Second * 3)
+
+				fc := exec.Command("cmd", "/C", "go", "run", "testexample/test.go")
+
+				fmt.Println("testing")
+
+				fc.Stdin = os.Stdin
+
+				fc.Stdout = os.Stdout
+
+				fc.Stderr = os.Stderr
+
+				fc.Start()
+
+				fmt.Println("deneme3")
+
+				// c := exec.Command("cmd", "/C", "go", "run", event.Name)
+
+				// c.Stdin = os.Stdin
+				// c.Stdout = os.Stdout
+				// c.Stderr = os.Stderr
+
+				// c.Run()
 			case err := <-watcher.Errors:
 				fmt.Println("ERROR", err)
 			}
