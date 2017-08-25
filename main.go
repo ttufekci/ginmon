@@ -56,18 +56,12 @@ func main() {
 
 	fc.Start()
 
-	fmt.Println("deneme")
-
-	// fmt.Printf("testing", out.String())
-
-	//
 	done := make(chan bool)
 
-	//
 	go func() {
 		for {
 			select {
-			// watch for events
+
 			case event := <-watcher.Events:
 				fmt.Printf("EVENT! %#v\n", event)
 
@@ -81,7 +75,9 @@ func main() {
 
 				kill.Run()
 
-				time.Sleep(time.Second * 3)
+				time.Sleep(time.Second * 13)
+
+				fmt.Println("Create again")
 
 				fc := exec.Command("cmd", "/C", "go", "run", "testexample/test.go")
 
@@ -95,24 +91,15 @@ func main() {
 
 				fc.Start()
 
-				fmt.Println("deneme3")
-
-				// c := exec.Command("cmd", "/C", "go", "run", event.Name)
-
-				// c.Stdin = os.Stdin
-				// c.Stdout = os.Stdout
-				// c.Stderr = os.Stderr
-
-				// c.Run()
 			case err := <-watcher.Errors:
-				fmt.Println("ERROR", err)
+				fmt.Println("ERROR_1", err)
 			}
 		}
 	}()
 
 	// out of the box fsnotify can watch a single file, or a single directory
 	if err := watcher.Add("testexample"); err != nil {
-		fmt.Println("ERROR", err)
+		fmt.Println("ERROR_2", err)
 	}
 
 	<-done
