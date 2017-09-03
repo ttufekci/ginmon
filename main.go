@@ -56,12 +56,9 @@ func main() {
 
 	done := make(chan bool)
 
-<<<<<<< HEAD
 	restart := make(chan bool)
 
 	//
-=======
->>>>>>> 7851e0c06507873fa1cd0e62fd34692cd8bae112
 	go func() {
 		for {
 			select {
@@ -81,13 +78,7 @@ func main() {
 
 				kill.Run()
 
-<<<<<<< HEAD
 				time.Sleep(time.Second * 1)
-=======
-				time.Sleep(time.Second * 13)
-
-				fmt.Println("Create again")
->>>>>>> 7851e0c06507873fa1cd0e62fd34692cd8bae112
 
 				fc = exec.Command("cmd", "/C", "go", "run", "testexample/test.go")
 
@@ -101,7 +92,6 @@ func main() {
 
 				fc.Start()
 
-<<<<<<< HEAD
 				fmt.Println("deneme3")
 
 				time.Sleep(time.Second * 1)
@@ -139,10 +129,6 @@ func main() {
 						fmt.Println("ERROR", err)
 					}
 				}
-=======
-			case err := <-watcher.Errors:
-				fmt.Println("ERROR_1", err)
->>>>>>> 7851e0c06507873fa1cd0e62fd34692cd8bae112
 			}
 		}
 	}()
