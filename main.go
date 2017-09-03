@@ -5,15 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-fsnotify/fsnotify"
 )
-
-func printCommand(cmd *exec.Cmd) {
-	fmt.Printf("==> Executing: %s\n", strings.Join(cmd.Args, " "))
-}
 
 func printError(err error) {
 	if err != nil {
@@ -44,7 +39,21 @@ func main() {
 	}
 	defer watcher.Close()
 
-	fc := exec.Command("cmd", "/C", "go", "run", "testexample/test.go")
+	fc := exec.Command("cmd", "/C", "go", "build", "testexample/test.go")
+
+	fc.Dir = "C:/gowork/src/github.com/ttufekci/ginmon"
+
+	fc.Stdin = os.Stdin
+
+	fc.Stdout = os.Stdout
+
+	fc.Stderr = os.Stderr
+
+	fc.Run()
+
+	fc = exec.Command("test.exe")
+
+	fc.Dir = "C:/gowork/src/github.com/ttufekci/ginmon"
 
 	fc.Stdin = os.Stdin
 
@@ -58,7 +67,6 @@ func main() {
 
 	restart := make(chan bool)
 
-	//
 	go func() {
 		for {
 			select {
@@ -80,7 +88,23 @@ func main() {
 
 				time.Sleep(time.Second * 1)
 
-				fc = exec.Command("cmd", "/C", "go", "run", "testexample/test.go")
+				fc = exec.Command("cmd", "/C", "go", "build", "testexample/test.go")
+
+				fc.Dir = "C:/gowork/src/github.com/ttufekci/ginmon"
+
+				fmt.Println("testing")
+
+				fc.Stdin = os.Stdin
+
+				fc.Stdout = os.Stdout
+
+				fc.Stderr = os.Stderr
+
+				fc.Run()
+
+				fc = exec.Command("test.exe")
+
+				fc.Dir = "C:/gowork/src/github.com/ttufekci/ginmon"
 
 				fmt.Println("testing")
 
@@ -102,19 +126,8 @@ func main() {
 
 				fmt.Println("restart is starting")
 
-				// c := exec.Command("cmd", "/C", "go", "run", event.Name)
-
-				// c.Stdin = os.Stdin
-				// c.Stdout = os.Stdout
-				// c.Stderr = os.Stderr
-
-				// c.Run()
 			case err := <-watcher.Errors:
 				fmt.Println("ERROR", err)
-
-				// default: // If none are ready currently, we end up here
-				// 	//fmt.Println("default is working")
-				// 	time.Sleep(time.Millisecond * 1)
 			}
 		}
 	}()
