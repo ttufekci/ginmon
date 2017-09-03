@@ -46,8 +46,6 @@ func main() {
 
 	fc := exec.Command("cmd", "/C", "go", "run", "testexample/test.go")
 
-	fmt.Println("testing")
-
 	fc.Stdin = os.Stdin
 
 	fc.Stdout = os.Stdout
@@ -63,6 +61,8 @@ func main() {
 	//
 	done := make(chan bool)
 
+	restart := make(chan bool)
+
 	//
 	go func() {
 		for {
@@ -70,6 +70,8 @@ func main() {
 			// watch for events
 			case event := <-watcher.Events:
 				fmt.Printf("EVENT! %#v\n", event)
+
+				watcher.Remove("testexample")
 
 				kill := exec.Command("TASKKILL", "/T", "/F", "/PID", strconv.Itoa(fc.Process.Pid))
 
@@ -81,9 +83,9 @@ func main() {
 
 				kill.Run()
 
-				time.Sleep(time.Second * 3)
+				time.Sleep(time.Second * 1)
 
-				fc := exec.Command("cmd", "/C", "go", "run", "testexample/test.go")
+				fc = exec.Command("cmd", "/C", "go", "run", "testexample/test.go")
 
 				fmt.Println("testing")
 
@@ -97,6 +99,14 @@ func main() {
 
 				fmt.Println("deneme3")
 
+				time.Sleep(time.Second * 1)
+
+				fmt.Println("before restart true")
+
+				restart <- true
+
+				fmt.Println("restart is starting")
+
 				// c := exec.Command("cmd", "/C", "go", "run", event.Name)
 
 				// c.Stdin = os.Stdin
@@ -106,6 +116,24 @@ func main() {
 				// c.Run()
 			case err := <-watcher.Errors:
 				fmt.Println("ERROR", err)
+
+				// default: // If none are ready currently, we end up here
+				// 	//fmt.Println("default is working")
+				// 	time.Sleep(time.Millisecond * 1)
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case restarted := <-restart:
+				fmt.Println("restarted another func", restarted)
+				if restarted {
+					if err := watcher.Add("testexample"); err != nil {
+						fmt.Println("ERROR", err)
+					}
+				}
 			}
 		}
 	}()
