@@ -11,6 +11,31 @@ import (
 	"github.com/go-fsnotify/fsnotify"
 )
 
+var watcher *fsnotify.Watcher
+
+// watchDir gets run as a walk func, searching for directories to add watchers to
+func watchDir(path string, fi os.FileInfo, err error) error {
+
+	// since fsnotify can watch all the files in a directory, watchers only need
+	// to be added to each nested directory
+	if fi.Mode().IsDir() {
+		return watcher.Add(path)
+	}
+
+	return nil
+}
+
+func watchRemoveDir(path string, fi os.FileInfo, err error) error {
+
+	// since fsnotify can watch all the files in a directory, watchers only need
+	// to be added to each nested directory
+	if fi.Mode().IsDir() {
+		return watcher.Remove(path)
+	}
+
+	return nil
+}
+
 // main
 func main() {
 
@@ -28,7 +53,7 @@ func main() {
 	exeName := dirName + ".exe"
 
 	// creates a new file watcher
-	watcher, err := fsnotify.NewWatcher()
+	watcher, err = fsnotify.NewWatcher()
 	if err != nil {
 		fmt.Println("ERROR: ", err)
 	}
@@ -77,7 +102,13 @@ buildError:
 			case event := <-watcher.Events:
 				fmt.Printf("EVENT! %#v\n", event)
 
-				watcher.Remove(exPath)
+				// watcher.Remove(exPath)
+
+				// starting at the root of the project, walk each file/directory searching for
+				// directories
+				if err := filepath.Walk(exPath, watchRemoveDir); err != nil {
+					fmt.Println("ERROR", err)
+				}
 
 				kill := exec.Command("TASKKILL", "/T", "/F", "/PID", strconv.Itoa(fc.Process.Pid))
 
@@ -142,7 +173,7 @@ buildError:
 			select {
 			case restarted := <-restart:
 				if restarted {
-					if err := watcher.Add(exPath); err != nil {
+					if err := filepath.Walk(exPath, watchDir); err != nil {
 						fmt.Println("ERROR", err)
 					}
 				}
@@ -150,10 +181,16 @@ buildError:
 		}
 	}()
 
-	// out of the box fsnotify can watch a single file, or a single directory
-	if err := watcher.Add(exPath); err != nil {
-		fmt.Println("error for watcher: ", err)
+	// starting at the root of the project, walk each file/directory searching for
+	// directories
+	if err := filepath.Walk(exPath, watchDir); err != nil {
+		fmt.Println("ERROR", err)
 	}
+
+	// out of the box fsnotify can watch a single file, or a single directory
+	// if err := watcher.Add(exPath); err != nil {
+	// 	fmt.Println("error for watcher: ", err)
+	// }
 
 	<-done
 }
