@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -13,6 +14,19 @@ import (
 // main
 func main() {
 
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+
+	exPath := filepath.Dir(ex)
+	fmt.Println(exPath)
+
+	dirName := filepath.Base(exPath)
+	fmt.Println("dirname", dirName)
+
+	exeName := dirName + ".exe"
+
 	// creates a new file watcher
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -20,9 +34,11 @@ func main() {
 	}
 	defer watcher.Close()
 
-	fc := exec.Command("go", "build", "testexample/test.go")
+	//fc := exec.Command("go", "build", "testexample/test.go")
 
-	fc.Dir = "C:/gowork/src/github.com/ttufekci/ginmon"
+	fc := exec.Command("go", "build")
+
+	fc.Dir = exPath
 
 	fc.Stdin = os.Stdin
 
@@ -36,9 +52,9 @@ func main() {
 		goto buildError
 	}
 
-	fc = exec.Command("test.exe")
+	fc = exec.Command(exeName)
 
-	fc.Dir = "C:/gowork/src/github.com/ttufekci/ginmon"
+	fc.Dir = exPath
 
 	fc.Stdin = os.Stdin
 
@@ -61,7 +77,7 @@ buildError:
 			case event := <-watcher.Events:
 				fmt.Printf("EVENT! %#v\n", event)
 
-				watcher.Remove("testexample")
+				watcher.Remove(exPath)
 
 				kill := exec.Command("TASKKILL", "/T", "/F", "/PID", strconv.Itoa(fc.Process.Pid))
 
@@ -79,9 +95,11 @@ buildError:
 
 				time.Sleep(time.Second * 1)
 
-				fc = exec.Command("go", "build", "testexample/test.go")
+				// fc = exec.Command("go", "build", "testexample/test.go")
 
-				fc.Dir = "C:/gowork/src/github.com/ttufekci/ginmon"
+				fc = exec.Command("go", "build")
+
+				fc.Dir = exPath
 
 				fc.Stdin = os.Stdin
 
@@ -95,9 +113,9 @@ buildError:
 					goto buildErrorInsideLabel
 				}
 
-				fc = exec.Command("test.exe")
+				fc = exec.Command(exeName)
 
-				fc.Dir = "C:/gowork/src/github.com/ttufekci/ginmon"
+				fc.Dir = exPath
 
 				fc.Stdin = os.Stdin
 
@@ -124,7 +142,7 @@ buildError:
 			select {
 			case restarted := <-restart:
 				if restarted {
-					if err := watcher.Add("testexample"); err != nil {
+					if err := watcher.Add(exPath); err != nil {
 						fmt.Println("ERROR", err)
 					}
 				}
@@ -133,7 +151,7 @@ buildError:
 	}()
 
 	// out of the box fsnotify can watch a single file, or a single directory
-	if err := watcher.Add("testexample"); err != nil {
+	if err := watcher.Add(exPath); err != nil {
 		fmt.Println("error for watcher: ", err)
 	}
 
