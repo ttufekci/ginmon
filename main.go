@@ -49,7 +49,11 @@ func main() {
 
 	fc.Stderr = os.Stderr
 
-	fc.Run()
+	err = fc.Run()
+	if err != nil {
+		fmt.Println("error occurred")
+		goto errorLabel
+	}
 
 	fc = exec.Command("test.exe")
 
@@ -62,6 +66,8 @@ func main() {
 	fc.Stderr = os.Stderr
 
 	fc.Start()
+
+errorLabel:
 
 	done := make(chan bool)
 
@@ -84,7 +90,12 @@ func main() {
 
 				kill.Stderr = os.Stderr
 
-				kill.Run()
+				err = kill.Run()
+
+				if err != nil {
+					fmt.Println("error occurred when killing process")
+					// goto errorInsideLabel
+				}
 
 				time.Sleep(time.Second * 1)
 
@@ -100,7 +111,12 @@ func main() {
 
 				fc.Stderr = os.Stderr
 
-				fc.Run()
+				err = fc.Run()
+
+				if err != nil {
+					fmt.Println("error occurred 2")
+					goto errorInsideLabel
+				}
 
 				fc = exec.Command("test.exe")
 
@@ -115,6 +131,8 @@ func main() {
 				fc.Stderr = os.Stderr
 
 				fc.Start()
+
+			errorInsideLabel:
 
 				fmt.Println("deneme3")
 
