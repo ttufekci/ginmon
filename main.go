@@ -16,11 +16,11 @@ func main() {
 	// creates a new file watcher
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		fmt.Println("ERROR", err)
+		fmt.Println("ERROR: ", err)
 	}
 	defer watcher.Close()
 
-	fc := exec.Command("cmd", "/C", "go", "build", "testexample/test.go")
+	fc := exec.Command("go", "build", "testexample/test.go")
 
 	fc.Dir = "C:/gowork/src/github.com/ttufekci/ginmon"
 
@@ -32,7 +32,7 @@ func main() {
 
 	err = fc.Run()
 	if err != nil {
-		fmt.Println("error occurred")
+		fmt.Println("ERROR: ", err)
 		goto buildError
 	}
 
@@ -79,7 +79,7 @@ buildError:
 
 				time.Sleep(time.Second * 1)
 
-				fc = exec.Command("cmd", "/C", "go", "build", "testexample/test.go")
+				fc = exec.Command("go", "build", "testexample/test.go")
 
 				fc.Dir = "C:/gowork/src/github.com/ttufekci/ginmon"
 
