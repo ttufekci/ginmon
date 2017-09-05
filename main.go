@@ -16,11 +16,8 @@ var watcher *fsnotify.Watcher
 
 var ext = ".go"
 
-// watchDir gets run as a walk func, searching for directories to add watchers to
 func watchDir(path string, fi os.FileInfo, err error) error {
 
-	// since fsnotify can watch all the files in a directory, watchers only need
-	// to be added to each nested directory
 	if !fi.Mode().IsDir() {
 		r, err := regexp.MatchString(ext, fi.Name())
 		if err == nil && r {
@@ -33,8 +30,6 @@ func watchDir(path string, fi os.FileInfo, err error) error {
 
 func watchRemoveDir(path string, fi os.FileInfo, err error) error {
 
-	// since fsnotify can watch all the files in a directory, watchers only need
-	// to be added to each nested directory
 	if !fi.Mode().IsDir() {
 		r, err := regexp.MatchString(ext, fi.Name())
 		if err == nil && r {
@@ -45,7 +40,6 @@ func watchRemoveDir(path string, fi os.FileInfo, err error) error {
 	return nil
 }
 
-// main
 func main() {
 
 	pwd, err := os.Getwd()
@@ -53,15 +47,9 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println("pwd", pwd)
-
 	exPath := pwd
 
-	//filepath.Dir(pwd)
-	//fmt.Println("expath", exPath)
-
 	dirName := filepath.Base(exPath)
-	fmt.Println("dirname", dirName)
 
 	exeName := dirName + ".exe"
 
@@ -70,6 +58,7 @@ func main() {
 	if err != nil {
 		fmt.Println("ERROR: ", err)
 	}
+
 	defer watcher.Close()
 
 	fc := exec.Command("go", "build")
@@ -107,17 +96,25 @@ buildError:
 
 	restart := make(chan bool)
 
+	watcherRemoved := false
+
 	go func() {
 		for {
 			select {
 
 			case event := <-watcher.Events:
+				watcher.Remove(event.Name)
+				watcher.Add(event.Name)
+
+				if watcherRemoved {
+					fmt.Println("watcher removed")
+					return
+				}
+
 				fmt.Printf("EVENT! %#v\n", event)
 
-				// watcher.Remove(exPath)
+				watcherRemoved = true
 
-				// starting at the root of the project, walk each file/directory searching for
-				// directories
 				if err := filepath.Walk(exPath, watchRemoveDir); err != nil {
 					fmt.Println("ERROR", err)
 				}
@@ -135,10 +132,6 @@ buildError:
 				if err != nil {
 					fmt.Println("error occurred when killing process")
 				}
-
-				time.Sleep(time.Second * 1)
-
-				// fc = exec.Command("go", "build", "testexample/test.go")
 
 				fc = exec.Command("go", "build")
 
@@ -170,9 +163,11 @@ buildError:
 
 			buildErrorInsideLabel:
 
-				time.Sleep(time.Second * 1)
+				time.Sleep(time.Second * 2)
 
 				restart <- true
+
+				watcherRemoved = false
 
 			case err := <-watcher.Errors:
 				fmt.Println("ERROR", err)
@@ -193,16 +188,9 @@ buildError:
 		}
 	}()
 
-	// starting at the root of the project, walk each file/directory searching for
-	// directories
 	if err := filepath.Walk(exPath, watchDir); err != nil {
 		fmt.Println("ERROR", err)
 	}
-
-	// out of the box fsnotify can watch a single file, or a single directory
-	// if err := watcher.Add(exPath); err != nil {
-	// 	fmt.Println("error for watcher: ", err)
-	// }
 
 	<-done
 }
