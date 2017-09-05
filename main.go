@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -13,13 +14,18 @@ import (
 
 var watcher *fsnotify.Watcher
 
+var ext = ".go"
+
 // watchDir gets run as a walk func, searching for directories to add watchers to
 func watchDir(path string, fi os.FileInfo, err error) error {
 
 	// since fsnotify can watch all the files in a directory, watchers only need
 	// to be added to each nested directory
-	if fi.Mode().IsDir() {
-		return watcher.Add(path)
+	if !fi.Mode().IsDir() {
+		r, err := regexp.MatchString(ext, fi.Name())
+		if err == nil && r {
+			return watcher.Add(path)
+		}
 	}
 
 	return nil
@@ -29,8 +35,11 @@ func watchRemoveDir(path string, fi os.FileInfo, err error) error {
 
 	// since fsnotify can watch all the files in a directory, watchers only need
 	// to be added to each nested directory
-	if fi.Mode().IsDir() {
-		return watcher.Remove(path)
+	if !fi.Mode().IsDir() {
+		r, err := regexp.MatchString(ext, fi.Name())
+		if err == nil && r {
+			return watcher.Remove(path)
+		}
 	}
 
 	return nil
