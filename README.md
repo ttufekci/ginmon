@@ -1,6 +1,6 @@
 # Ginmon
 
-Ginmon is a go tool, that will monitor for any changes in your source and automatically restart your golang web application.
+Ginmon is a go tool, that will monitor for any changes in your source and automatically restarts your golang web application.
 
 - Automatically builds and restarts when a go file changes  
 - Open source and available on github  
