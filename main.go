@@ -39,13 +39,17 @@ func watchRemoveDir(path string, fi os.FileInfo, err error) error {
 // main
 func main() {
 
-	ex, err := os.Executable()
+	pwd, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
 
-	exPath := filepath.Dir(ex)
-	fmt.Println(exPath)
+	fmt.Println("pwd", pwd)
+
+	exPath := pwd
+
+	//filepath.Dir(pwd)
+	//fmt.Println("expath", exPath)
 
 	dirName := filepath.Base(exPath)
 	fmt.Println("dirname", dirName)
@@ -59,8 +63,6 @@ func main() {
 	}
 	defer watcher.Close()
 
-	//fc := exec.Command("go", "build", "testexample/test.go")
-
 	fc := exec.Command("go", "build")
 
 	fc.Dir = exPath
@@ -72,6 +74,7 @@ func main() {
 	fc.Stderr = os.Stderr
 
 	err = fc.Run()
+
 	if err != nil {
 		fmt.Println("ERROR: ", err)
 		goto buildError
